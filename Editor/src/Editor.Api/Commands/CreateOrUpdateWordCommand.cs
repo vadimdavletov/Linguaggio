@@ -1,17 +1,18 @@
 ﻿using Editor.Core.Enums;
+using MediatR;
 using System;
 
-namespace Editor.Api.Models
+namespace Editor.Api.Commands
 {
     /// <summary>
-    /// Информация о слове.
+    /// Команда на добавление/обновление записи о слове.
     /// </summary>
-    public class WordResourceModel
+    public class CreateOrUpdateWordCommand : IRequest
     {
         /// <summary>
         /// Идентификатор слова.
         /// </summary>
-        public Guid WordId { get; set; }
+        public Guid WordId { get; set; } = Guid.NewGuid();
 
         /// <summary>
         /// Слово.

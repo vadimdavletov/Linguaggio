@@ -1,6 +1,9 @@
-﻿using Editor.Api.Models;
+﻿using Editor.Api.Commands;
+using Editor.Api.Models;
+using Editor.Api.Queries;
 using Editor.Core.Entities;
 using Editor.Domain.Interfaces.Storages;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Net;
@@ -15,6 +18,28 @@ namespace Editor.Api.Controllers
     [Route("api/words")]
     public class WordsController : ControllerBase
     {
+        #region Поля
+
+        /// <summary>
+        /// Медиатор.
+        /// </summary>
+        private readonly IMediator _mediator;
+
+        #endregion Поля
+
+        #region Конструктор
+
+        /// <summary>
+        /// Создает экземпляр <see cref="WordsController"/>.
+        /// </summary>
+        /// <param name="mediator">Медиатор.</param>
+        public WordsController(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
+
+        #endregion Конструктор
+
         #region REST ресурсы
 
         /// <summary>
@@ -27,8 +52,7 @@ namespace Editor.Api.Controllers
         [ProducesResponseType(typeof(WordResourceModel), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> GetWordAsync(
-            [FromRoute] Guid wordId,
-            [FromServices] IWordStorage wordStorage
+            [FromRoute] Guid wordId
         )
         {
             if (wordId == Guid.Empty)
@@ -36,22 +60,14 @@ namespace Editor.Api.Controllers
                 return NotFound("Идентификатор слова не задан.");
             }
 
-            var word = await wordStorage.GetAsync(wordId);
+            var word = await _mediator.Send(new GetWordQuery(wordId));
 
             if (word == null)
             {
                 return NotFound();
             }
 
-            var wordResourceModel = new WordResourceModel
-            {
-                WordId = word.WordId,
-                WordValue = word.WordValue,
-                Language = word.Language,
-                Transcription = word.Transcription
-            };
-
-            return Ok(wordResourceModel);
+            return Ok(word);
         }
 
         /// <summary>
@@ -64,27 +80,17 @@ namespace Editor.Api.Controllers
         [ProducesResponseType(typeof(string), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> CreateOrUpdateWordAsync(
-            [FromBody] WordResourceModel wordResourceModel,
-            [FromServices] IWordStorage wordStorage
+            [FromBody] CreateOrUpdateWordCommand createOrUpdateWordCommand
         )
         {
-            if (wordResourceModel == null)
+            if (createOrUpdateWordCommand == null)
             {
                 return BadRequest("Передана пустая модель с информацией о слове.");
             }
 
-            var word = new Word
-            {
-                WordId = wordResourceModel.WordId,
-                WordValue = wordResourceModel.WordValue,
-                Language = wordResourceModel.Language,
-                Transcription = wordResourceModel.Transcription
+            await _mediator.Send(createOrUpdateWordCommand);
 
-            };
-
-            await wordStorage.CreateOrUpdateAsync(word);
-
-            return Ok(wordResourceModel);
+            return Ok($"Информация о слове с идентификатором {createOrUpdateWordCommand.WordId} успешно добавлена/обновлена");
         }
 
         /// <summary>
@@ -97,8 +103,7 @@ namespace Editor.Api.Controllers
         [ProducesResponseType(typeof(WordResourceModel), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> DeleteWordAsync(
-            [FromRoute] Guid wordId,
-            [FromServices] IWordStorage wordStorage
+            [FromRoute] Guid wordId
         )
         {
             if (wordId == Guid.Empty)
@@ -106,7 +111,7 @@ namespace Editor.Api.Controllers
                 return NotFound("Идентификатор слова не задан.");
             }
 
-            await wordStorage.DeleteAsync(wordId);
+            await _mediator.Send(new DeleteWordCommand(wordId));
 
             return Ok($"Информация о слове с идентификатором {wordId} успешно удалена");
         }
