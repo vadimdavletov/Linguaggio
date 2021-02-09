@@ -1,0 +1,21 @@
+version: '3.4'
+
+services:
+  identity.api:
+    image: ${DOCKER_REGISTRY-}identityapi
+    build:
+      context: .
+      dockerfile: Identity/src/Identity.Api/Dockerfile
+    depends_on:
+      - sql.data
+
+  editor.api:
+    image: ${DOCKER_REGISTRY-}editorapi
+    build:
+      context: .
+      dockerfile: Editor/src/Editor.Api/Dockerfile
+    depends_on:
+      - sql.data
+      
+  sql.data:
+    image: postgres:latest
