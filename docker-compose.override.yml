@@ -1,0 +1,30 @@
+version: '3.4'
+
+services:
+  identity.api:
+    env_file:
+      - .env
+    environment:
+      - BasePath=/identity
+      - DbConnectionString=Host=${PG_HOST:-sql.data};Port=${PG_PORT:-5432};Database=identity-db;Username=${PG_USER_NAME:-linguaggio-user};Password=${PG_PASSWORD:-Pass@word}
+    ports:
+      - "7700:80"
+    volumes:
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+  editor.api:
+    env_file:
+      - .env
+    environment:
+      - BasePath=/editor
+      - DbConnectionString=Host=${PG_HOST:-sql.data};Port=${PG_PORT:-5432};Database=editor-db;Username=${PG_USER_NAME:-linguaggio-user};Password=${PG_PASSWORD:-Pass@word}
+    ports:
+      - "7800:80"
+    volumes:
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  sql.data:
+    environment:
+      - POSTGRES_PASSWORD=Pass@word
+      - POSTGRES_USER=linguaggio-user
+    ports:
+      - "5432:5432"
