@@ -1,0 +1,8 @@
+**/obj
+**/bin
+.suo
+**/.vs
+/.vscode
+**/.idea
+**/v15
+**/*.csproj.user
